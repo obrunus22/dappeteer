@@ -114,18 +114,22 @@ export async function setupMetamask(
   const page = await closeHomeScreen(browser);
   await confirmWelcomeScreen(page);
 
-  await importAccount(
+  const import = await importAccount(
     page,
     options.seed || 'already turtle birth enroll since owner keep patch skirt drift any dinner',
     options.password || 'password1234',
     options.hideSeed,
   );
 
-  await closeNotificationPage(browser);
+  if (import){
+      await closeNotificationPage(browser);
 
-  await showTestNets(page);
+      await showTestNets(page);
 
-  return getMetamask(page);
+      return getMetamask(page);
+  }  
+  
+  retrun false;
 }
 
 /**
@@ -215,6 +219,8 @@ async function importAccount(
 
     const seedPhraseInput = await metamaskPage.waitForSelector('.first-time-flow textarea');
     await seedPhraseInput.type(seed);
+    const error = yield metamaskPage.$$('.first-time-flow__textarea-wrapper > span.error');
+    if (error.length > 0) return false;
   }
 
   const passwordInput = await metamaskPage.waitForSelector('#password');
@@ -234,4 +240,6 @@ async function importAccount(
 
   const popupButton = await metamaskPage.waitForSelector('.popover-header__button');
   await popupButton.click();
+    
+  return true;
 }
